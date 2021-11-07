@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Hex Writer
+"""Cipher Factory
 
 Run with command-line argument "-h" to display the online help.
 
-Nicolas Pioch, 31 Mar 2012
+Aubin Puyoou, 7 Nov 2021
 $Id$
 """
 
