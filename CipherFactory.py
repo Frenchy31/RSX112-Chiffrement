@@ -7,8 +7,10 @@ Run with command-line argument "-h" to display the online help.
 Aubin Puyoou, 7 Nov 2021
 $Id$
 """
-
+from Crypto.Cipher import AES
 import argparse
+
+from Crypto.Util import Counter
 
 
 def init_rc4(keyfile):
@@ -44,6 +46,54 @@ def cipher_rc4(infile, keyfile, outfile, skip_bytes, debug):
     print('Fin chiffrement.')
 
 
+def cipher_aes_ecb(infile, keyfile, outfile, skip_bytes, debug):
+    aes = AES.new(bytes(keyfile), AES.MODE_ECB)
+    if skip_bytes != 0:
+        skipped_bytes = []
+        bytes_to_encrypt = []
+        for i in range(0, skip_bytes):
+            skipped_bytes.append(infile[i])
+        for i in range(skip_bytes, len(infile)):
+            bytes_to_encrypt.append(infile[i])
+        encrypted = aes.encrypt(bytes(bytes_to_encrypt))
+        outfile.write(bytes(skipped_bytes))
+    else:
+        encrypted = aes.encrypt(infile)
+    outfile.write(bytes(encrypted))
+
+
+def cipher_aes_cbc(infile, keyfile, iv, outfile, skip_bytes, debug):
+    aes = AES.new(bytes(keyfile), AES.MODE_CBC, iv)
+    if skip_bytes != 0:
+        skipped_bytes = []
+        bytes_to_encrypt = []
+        for i in range(0, skip_bytes):
+            skipped_bytes.append(infile[i])
+        for i in range(skip_bytes, len(infile)):
+            bytes_to_encrypt.append(infile[i])
+        encrypted = aes.encrypt(bytes(bytes_to_encrypt))
+        outfile.write(bytes(skipped_bytes))
+    else:
+        encrypted = aes.encrypt(infile)
+    outfile.write(bytes(encrypted))
+
+
+def cipher_aes_ctr(infile, keyfile, outfile, skip_bytes, debug):
+    aes = AES.new(bytes(keyfile), AES.MODE_CTR, counter=Counter.new(128))
+    if skip_bytes != 0:
+        skipped_bytes = []
+        bytes_to_encrypt = []
+        for i in range(0, skip_bytes):
+            skipped_bytes.append(infile[i])
+        for i in range(skip_bytes, len(infile)):
+            bytes_to_encrypt.append(infile[i])
+        encrypted = aes.encrypt(bytes(bytes_to_encrypt))
+        outfile.write(bytes(skipped_bytes))
+    else:
+        encrypted = aes.encrypt(infile)
+    outfile.write(bytes(encrypted))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Cipher a binary file using the argument algorithm')
@@ -72,7 +122,7 @@ def main():
     parser.add_argument('--iv',
                         help='Initialization Vector file name (CBC only)',
                         required=False,
-                        type=argparse.FileType('r'))
+                        type=argparse.FileType('rb'))
     parser.add_argument('-i', '--infile',
                         help='Input file name',
                         required=True,
@@ -85,6 +135,12 @@ def main():
 
     if args.cipher == 'rc4':
         cipher_rc4(args.infile.read(), args.keyfile.read(), args.outfile, args.skip_bytes, args.debug)
+    elif args.cipher == 'aes-ecb':
+        cipher_aes_ecb(args.infile.read(), args.keyfile.read(), args.outfile, args.skip_bytes, args.debug)
+    elif args.cipher == 'aes-cbc':
+        cipher_aes_cbc(args.infile.read(), args.keyfile.read(), args.iv.read(), args.outfile, args.skip_bytes, args.debug)
+    elif args.cipher == 'aes-ctr':
+        cipher_aes_ctr(args.infile.read(), args.keyfile.read(), args.outfile, args.skip_bytes, args.debug)
 
     args.infile.close()
     args.keyfile.close()
